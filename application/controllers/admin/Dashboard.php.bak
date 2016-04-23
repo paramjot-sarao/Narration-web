@@ -1,0 +1,70 @@
+<?php defined('BASEPATH') OR exit('No direct script access allowed');
+
+class Dashboard extends Admin_Controller
+{
+
+  function __construct()
+  {
+    parent::__construct();
+  }
+
+  public function index()
+  {
+  	require_once(BASEPATH . '../application/third_party/google-api-php-client/src/Google/autoload.php');
+    
+  	//require_once(BASEPATH . '../application/third_party/google-api-php-client/src/Google/Client.php');
+//require_once(BASEPATH . '../application/third_party/Google/Service/Analytics.php');
+
+	//session_start();
+    $p12FilePath =  BASEPATH . '../application/third_party/google-api-php-client/src/Google/ijorcs2-5223f64e4963.p12';
+
+// OAuth2 service account ClientId
+$serviceClientId = '1044240153354-a2gjfh2j3mlkkp8sp9iqgt3ft4iehkr9.apps.googleusercontent.com';
+
+// OAuth2 service account email address
+$serviceAccountName = 'account-1@ijorcs2.iam.gserviceaccount.com';
+
+// Scopes we're going to use, only analytics for this tutorial
+$scopes = array(
+    'https://www.googleapis.com/auth/analytics.readonly'
+);
+
+$googleAssertionCredentials = new Google_Auth_AssertionCredentials(
+    $serviceAccountName,
+    $scopes,
+    file_get_contents($p12FilePath)
+);
+
+  $client = new Google_Client();
+$client->setAssertionCredentials($googleAssertionCredentials);
+$client->setClientId($serviceClientId);
+$client->setApplicationName("Project");
+
+// Create Google Service Analytics object with our preconfigured Google_Client
+  
+  $analytics = new Google_Service_Analytics($client);
+
+// Add Analytics View ID, prefixed with "ga:"
+//$analyticsViewId    = 'ga:112810943';
+
+
+//ijorcs all website data
+$analyticsViewId    = 'ga:107901685';
+
+$startDate          = '2015-11-01';
+$endDate            = '2015-11-15';
+$metrics            = 'ga:sessions,ga:pageviews';
+
+$data = $analytics->data_ga->get($analyticsViewId, $startDate, $endDate, $metrics, array(
+    'dimensions'    => 'ga:pagePath',
+    'filters'       => 'ga:pagePath==/url/to/product/',
+    'sort'          => '-ga:pageviews',
+));
+
+// Data 
+$items = $data->getRows();
+$this->data['report'] = $items;
+
+    $this->render('admin/dashboard_view');
+  }
+}
